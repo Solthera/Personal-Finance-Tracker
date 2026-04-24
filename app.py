@@ -10,6 +10,8 @@ st.title("💰 Personal Finance Tracker")
 
 tab_transaksi, tab_kategori, tab_goals = st.tabs(["Transaksi", "Kategori", "Goals"])
 
+EXPENSE_CATEGORIES = ["Makan", "Transport", "Hiburan", "Belanja", "Tagihan", "Investasi", "Goals", "Lainnya"]
+
 with tab_transaksi:
     st.subheader("Tambah Transaksi Baru")
     with st.form("form_transaksi"):
@@ -20,7 +22,7 @@ with tab_transaksi:
         else:
             kategori = st.selectbox(
                 "Kategori",
-                ["Makan", "Transport", "Hiburan", "Belanja", "Tagihan", "Investasi", "Goals", "Lainnya"],
+                EXPENSE_CATEGORIES,
             )
         catatan = st.text_input("Catatan (opsional)")
         submit_transaksi = st.form_submit_button("Simpan Transaksi")
@@ -106,8 +108,9 @@ with tab_transaksi:
 
 with tab_kategori:
     st.subheader("Tambah Kategori")
+
     with st.form("form_categories"):
-        nama_kategori = st.text_input("Nama Kategori")
+        nama_kategori = st.selectbox("Nama Kategori", EXPENSE_CATEGORIES)
         budget_limit = st.number_input("Budget Limit (Rp)", min_value=0, step=1000)
         submit_kategori = st.form_submit_button("Simpan Kategori")
 
@@ -116,15 +119,20 @@ with tab_kategori:
             st.warning("Nama kategori tidak boleh kosong!")
         else:
             try:
-                add_categories(nama_kategori.strip(), budget_limit)
+                result = add_categories(nama_kategori.strip(), budget_limit)
             except gspread.exceptions.SpreadsheetNotFound:
                 st.error(
                     "Spreadsheet tidak ditemukan / belum di-share ke service account. "
                     "Cek `SPREADSHEET_ID`/`SPREADSHEET_NAME` dan pastikan Google Sheet sudah di-share."
                 )
             else:
-                st.success("Kategori berhasil disimpan! ✅")
-                st.toast("Kategori tersimpan.")
+                if result == "updated":
+                    st.success("Kategori sudah ada — budget berhasil ditambahkan ✅")
+                    st.toast("Budget kategori diupdate.")
+                else:
+                    st.success("Kategori berhasil disimpan! ✅")
+                    st.toast("Kategori tersimpan.")
+                st.rerun()
 
     st.divider()
     st.subheader("📋 Daftar Kategori")
