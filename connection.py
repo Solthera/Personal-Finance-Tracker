@@ -41,11 +41,26 @@ def _load_credentials(scopes):
         "atau sediakan file `credentials.json`."
     )
 
+def _get_setting(name: str, default: str = "") -> str:
+    value = os.getenv(name, "").strip()
+    if value:
+        return value
+
+    try:
+        import streamlit as st
+
+        if name in st.secrets:
+            return str(st.secrets[name]).strip()
+    except Exception:
+        pass
+
+    return default.strip()
+
 
 @lru_cache(maxsize=1)
 def get_spreadsheet():
-    spreadsheet_id = os.getenv("SPREADSHEET_ID", "").strip()
-    spreadsheet_name = os.getenv("SPREADSHEET_NAME", "personal-finance-tracker").strip()
+    spreadsheet_id = _get_setting("SPREADSHEET_ID", "")
+    spreadsheet_name = _get_setting("SPREADSHEET_NAME", "personal-finance-tracker")
 
     creds = _load_credentials(SCOPES)
     client = gspread.authorize(creds)
